@@ -3,7 +3,7 @@ const fs = require("fs");
 const cors = require("cors");
 
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5000; // Use dynamic port from Render
 
 app.use(express.json()); // Middleware to parse JSON
 app.use(cors()); // Allow frontend access
@@ -45,4 +45,4 @@ app.patch("/users/:id", (req, res) => {
 });
 
 // Start the server
-app.listen(PORT, () => console.log(`✅ Server running on http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
