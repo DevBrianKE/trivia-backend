@@ -1,0 +1,18 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "username": "Player1",
+      "score": 10,
+      "preferences": {
+        "theme": "dark"
+      }
+    },
+    {
+      "id": 2,
+      "username": "kipchumba brian",
+      "score": 1,
+      "preferences": {}
+    }
+  ]
+}
