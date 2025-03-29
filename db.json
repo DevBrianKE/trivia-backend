@@ -1,18 +1,29 @@
 {
-  "users": [
+  "leaderboard": [
     {
-      "id": 1,
-      "username": "Player1",
-      "score": 10,
-      "preferences": {
-        "theme": "dark"
-      }
+      "id": "ec55",
+      "username": "DevbrianKE",
+      "score": 1
     },
     {
-      "id": 2,
-      "username": "kipchumba brian",
-      "score": 1,
-      "preferences": {}
+      "id": "9d94",
+      "username": "david",
+      "score": 1
+    },
+    {
+      "id": "f897",
+      "username": "ibaz",
+      "score": 1
+    },
+    {
+      "id": "a626",
+      "username": "julius",
+      "score": 2
+    },
+    {
+      "id": "4d06",
+      "username": "bush",
+      "score": 1
     }
   ]
 }

@@ -1,48 +1,87 @@
+require("dotenv").config();
 const express = require("express");
-const fs = require("fs");
+const fs = require("fs").promises;
 const cors = require("cors");
-
 const app = express();
-const PORT = process.env.PORT || 5000; // Use dynamic port from Render
-
-app.use(express.json()); // Middleware to parse JSON
-app.use(cors()); // Allow frontend access
-
+const PORT = process.env.PORT || 3000;
 const DB_FILE = "db.json";
 
-// Function to read database
-const readDB = () => JSON.parse(fs.readFileSync(DB_FILE, "utf8"));
+app.use(express.json());
+app.use(cors());
 
-// Function to write to database
-const writeDB = (data) => fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
+// ✅ Ensure db.json exists with initial structure
+const ensureDB = async () => {
+    try {
+        await fs.access(DB_FILE);
+    } catch (error) {
+        await fs.writeFile(DB_FILE, JSON.stringify({ users: [] }, null, 2));
+    }
+};
 
-// ✅ 1. Save User Score (POST request)
-app.post("/scores", (req, res) => {
+// ✅ Read database function
+const readDB = async () => {
+    try {
+        await ensureDB();
+        const data = await fs.readFile(DB_FILE, "utf8");
+        return JSON.parse(data);
+    } catch (error) {
+        console.error("❌ Error reading database:", error);
+        return { users: [] };
+    }
+};
+
+// ✅ Write to database function
+const writeDB = async (data) => {
+    try {
+        await fs.writeFile(DB_FILE, JSON.stringify(data, null, 2));
+        console.log("✅ Database successfully updated!");
+    } catch (error) {
+        console.error("❌ Error writing to database:", error);
+    }
+};
+
+// ✅ Save or Update User Score
+app.post("/scores", async (req, res) => {
     const { username, score } = req.body;
     if (!username || score == null) return res.status(400).json({ error: "Invalid data" });
 
-    const db = readDB();
-    const newUser = { id: db.users.length + 1, username, score, preferences: {} };
-    db.users.push(newUser);
-    writeDB(db);
+    const db = await readDB();
+    if (!db.users) db.users = [];
 
-    res.json({ message: "Score saved!", user: newUser });
+    const user = db.users.find(u => u.username.toLowerCase() === username.toLowerCase());
+    if (user) {
+        user.score = Math.max(user.score, score);
+    } else {
+        db.users.push({ id: db.users.length + 1, username, score, preferences: {} });
+    }
+    await writeDB(db);
+    res.json({ message: "Score updated!", user });
 });
 
-// ✅ 2. Update User Preferences (PATCH request)
-app.patch("/users/:id", (req, res) => {
+// ✅ Update User Preferences
+app.patch("/users/:id", async (req, res) => {
     const userId = parseInt(req.params.id);
     const { theme } = req.body;
 
-    const db = readDB();
+    const db = await readDB();
+    if (!db.users) return res.status(500).json({ error: "Database error" });
+
     const user = db.users.find(u => u.id === userId);
     if (!user) return res.status(404).json({ error: "User not found" });
 
     if (theme) user.preferences.theme = theme;
-    writeDB(db);
-
+    await writeDB(db);
     res.json({ message: "Preferences updated!", user });
 });
 
-// Start the server
+// ✅ Get Leaderboard
+app.get("/leaderboard", async (req, res) => {
+    const db = await readDB();
+    if (!db.users) return res.status(500).json({ error: "Database error" });
+
+    const leaderboard = db.users.slice().sort((a, b) => b.score - a.score);
+    res.json({ leaderboard });
+});
+
+// ✅ Start the server
 app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
